@@ -1,8 +1,8 @@
 #include<bits/stdc++.h>
 #include"algorithm.h"
 using namespace std;
-unsigned int timeLimit,randSeed;
-int ver_c,edg_c,ref_color;
+unsigned int timeLimit=5000,randSeed=0;
+int ver_c,edg_c,rec_color;
 unsigned int str_to_ui(const char *str){
 	if(*str=='0'){
 		if(*(str+1)=='\0') return 0;
@@ -37,16 +37,33 @@ int main(const int argc, const char** argv){
 			return -1;
 		}
 	}
-	cerr<<"timelimit: "<<timeLimit<<" randseed: "<<randSeed<<endl;
-	cin>>ver_c>>edg_c>>ref_color;
-	cerr<<ver_c<<" "<<edg_c<<" "<<ref_color<<endl;
-	Graph g(ver_c,edg_c);
-	for(int i=0;i<edg_c;i++){
-		int u,v;
-		cin>>u>>v;
-		g.add(u,v);
-		g.add(v,u);
-	}
-	cerr<<"success";
+	srand(randSeed);
+
+	// cerr<<"timelimit: "<<timeLimit<<" randseed: "<<randSeed<<endl;
+	cin>>ver_c>>edg_c>>rec_color;
+	// cerr<<ver_c<<" "<<edg_c<<" "<<rec_color<<endl;
+	// GCP gcp(ver_c,edg_c,rec_color);
+	// gcp.init(cin);
+
+	// Graph g(ver_c,edg_c);
+	// g.read(cin);
+	// g.randInit(rec_color);
+	// cerr<<"conflicts: "<<g.conflicts<<endl;
+	// cerr<<g;
+
+	// g.LocalSearch();
+	// cerr<<"conflicts: "<<g.conflicts<<endl;
+	// cerr<<g;
+
+	// g.LocalSearch();
+	// cerr<<"conflicts: "<<g.conflicts<<endl;
+	// cerr<<g;
+
+	// cerr<<"success";
+
+	GCP gcp(ver_c,edg_c,rec_color);
+	gcp.init(cin);
+	gcp.LocalSearch(10000);
+
 	return 0;
 }
