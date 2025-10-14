@@ -37,6 +37,7 @@ int main(const int argc, const char** argv){
 			return -1;
 		}
 	}
+	if(randSeed==0) randSeed=time(0);
 	srand(randSeed);
 
 	// cerr<<"timelimit: "<<timeLimit<<" randseed: "<<randSeed<<endl;

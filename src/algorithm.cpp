@@ -12,7 +12,8 @@ void Graph::add(int u,int v){
 void Graph::randInit(int ctype){
 	this->ctype=ctype;
 	adjTable.resize(vc);
-	for(auto &i:adjTable) i.resize(ctype);
+	for(auto &i:adjTable) i.resize(ctype,0);
+	ttt.resize(vc,ctype);
 	for(auto &v:vertices){
 		v.color=rand()%ctype;
 	}
@@ -72,7 +73,7 @@ ostream& operator<<(ostream &out,const Graph &g){
 	return out;
 }
 
-void Graph::LocalSearch(){
+bool Graph::LocalSearch(){
 	int minDelta=1,mver=-1,mfrom=-1,mto=-1;
 	for(auto v:conflictVertices){//寻找最优移动
 		for(int c=0;c<ctype;c++){
@@ -86,27 +87,151 @@ void Graph::LocalSearch(){
 			}
 		}
 	}
-	if(minDelta<=0){//更新邻接表
+	if(minDelta<=0){//更新邻接表和冲突顶点
 		conflicts+=minDelta;
 		vertices[mver].color=mto;
 		for(int i=vertices[mver].head;i!=-1;i=edges[i].nxt){
 			int to=edges[i].to;
 			adjTable[to][mfrom]--;
 			adjTable[to][mto]++;
+			if(isConflict(to)){
+				conflictVertices.insert(to);
+			}else{
+				conflictVertices.erase(to);
+			}
 		}
+		if(isConflict(mver)){
+			conflictVertices.insert(mver);
+		}else{
+			conflictVertices.erase(mver);
+		}
+		return true;
+	}else{
+		return false;
 	}
 }
 
 void GCP::LocalSearch(int iter){
 	g.randInit(rec_color);
+	bestSol=g;
 	auto start=Timestamp::getTimestampMs();
-	for(int i=0;i<iter;i++){
+	int i;
+	for(i=0;i<iter;i++){
 		if(Timestamp::getTimestampMs()-start>timeLimit) break;
-		g.LocalSearch();
+		bool improved=g.LocalSearch();
+		if(bestSol.conflicts>g.conflicts){
+			bestSol=g;
+		}
+		if(!improved) break;
 		if(g.conflicts==0) break;
 	}
-	cout<<"conflicts: "<<g.conflicts<<endl;
-	for(auto v:g.vertices){
-		cout<<v.color<<endl;
+	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
+	cout<<"iterations: "<<i+1<<endl;
+	cout<<bestSol;
+}
+
+void Graph::TabuSearch(int iter){
+	int minDelta=1,mver=-1,mfrom=-1,mto=-1;
+	int tminDelta=1,tmver=-1,tmfrom=-1,tmto=-1;
+	for(auto v:conflictVertices){//寻找最优移动
+		for(int c=0;c<ctype;c++){
+			if(c==vertices[v].color) continue;
+			int delta=adjTable[v][c]-adjTable[v][vertices[v].color];
+
+			if(ttt(v,c)>iter){//禁忌
+				if(delta<tminDelta){
+					tminDelta=delta;
+					tmver=v;
+					tmfrom=vertices[v].color;
+					tmto=c;
+				}
+			}else{
+				if(delta<minDelta){
+					minDelta=delta;
+					mver=v;
+					mfrom=vertices[v].color;
+					mto=c;
+				}
+			}
+		}
 	}
+	if(tminDelta<minDelta){//满足禁忌条件
+		minDelta=tminDelta;
+		mver=tmver;
+		mfrom=tmfrom;
+		mto=tmto;
+	}
+	//更新邻接表和冲突顶点以及禁忌表
+	conflicts+=minDelta;
+	vertices[mver].color=mto;
+	for(int i=vertices[mver].head;i!=-1;i=edges[i].nxt){
+		int to=edges[i].to;
+		adjTable[to][mfrom]--;
+		adjTable[to][mto]++;
+		if(isConflict(to)){
+			conflictVertices.insert(to);
+		}else{
+			conflictVertices.erase(to);
+		}
+	}
+	if(isConflict(mver)){
+		conflictVertices.insert(mver);
+	}else{
+		conflictVertices.erase(mver);
+	}
+	ttt(mver,mfrom)=iter+rand()%10+conflicts;//更新禁忌表
+}
+
+void GCP::TabuSearch(int iter){
+	g.randInit(rec_color);
+	bestSol=g;
+	auto start=Timestamp::getTimestampMs();
+	int i;
+	for(i=0;i<iter;i++){
+		if(Timestamp::getTimestampMs()-start>timeLimit) break;
+		g.TabuSearch(i);
+		if(bestSol.conflicts>g.conflicts){
+			bestSol=g;
+		}
+		if(g.conflicts==0) break;
+	}
+	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
+	cout<<"iterations: "<<i+1<<endl;
+	cout<<bestSol;
+}
+
+bool Graph::isConflict(int ver){
+	return adjTable[ver][vertices[ver].color]>0;
+}
+
+void TabuTenureTable::resize(int vc,int ctype){
+	table.resize(vc);
+	for(auto &i:table) i.resize(ctype,0);
+}
+
+int& TabuTenureTable::operator()(int v,int c){
+	return table[v][c];
+}
+
+Solution::Solution(Graph &g):conflicts(g.conflicts){
+	for(auto v:g.vertices){
+		color.push_back(v.color);
+	}
+}
+
+Solution& Solution::operator=(const Graph &g){
+	conflicts=g.conflicts;
+	color.clear();
+	for(auto v:g.vertices){
+		color.push_back(v.color);
+	}
+	return *this;
+}
+
+Solution::Solution():conflicts(0){}
+
+ostream& operator<<(ostream &out,const Solution &sol){
+	out<<"conflicts: "<<sol.conflicts<<"\ncolors:\n";
+	for(auto c:sol.color) out<<c<<"\n";
+	return out;
 }
