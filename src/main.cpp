@@ -64,7 +64,7 @@ int main(const int argc, const char** argv){
 
 	GCP gcp(ver_c,edg_c,rec_color);
 	gcp.init(cin);
-	gcp.LocalSearch(10000);
+	gcp.TabuSearch(10000);
 
 	return 0;
 }

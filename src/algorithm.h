@@ -9,10 +9,12 @@ extern unsigned int timeLimit;
 
 class TabuTenureTable{
 	private:
-	vector<vector<int>> table;
+	int vc,ctype;
+	int** table;
 	public:
 	void resize(int vc,int ctype);
 	int& operator()(int v,int c);
+	~TabuTenureTable();
 };
 
 class Graph{//利用链式前向星存储图

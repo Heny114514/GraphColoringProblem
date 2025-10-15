@@ -205,8 +205,22 @@ bool Graph::isConflict(int ver){
 }
 
 void TabuTenureTable::resize(int vc,int ctype){
-	table.resize(vc);
-	for(auto &i:table) i.resize(ctype,0);
+	this->vc=vc;
+	this->ctype=ctype;
+	table = new int*[vc];
+	for(int i=0;i<vc;i++){
+		table[i] = new int[ctype];
+		for(int j=0;j<ctype;j++){
+			table[i][j]=0;
+		}
+	}
+}
+
+TabuTenureTable::~TabuTenureTable(){
+	for(int i=0;i<vc;i++){
+		delete[] table[i];
+	}
+	delete[] table;
 }
 
 int& TabuTenureTable::operator()(int v,int c){
