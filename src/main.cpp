@@ -64,8 +64,9 @@ int main(const int argc, const char** argv){
 
 	GCP gcp(ver_c,edg_c,rec_color);
 	gcp.init();
-	
-	gcp.HybridEvolutionary(10000/GenerationSize);
+	// gcp.LocalSearch(10000);
+	gcp.TabuSearch(10000);
+	// gcp.HybridEvolutionary(10000/GenerationSize);
 
 	// Graph g(ver_c,edg_c);
 	// g.read();
