@@ -1,5 +1,5 @@
-time: 30002ms
-iterations: 6594
+time: 41883ms
+iterations: 10001
 conflicts: 732
 colors:
 28

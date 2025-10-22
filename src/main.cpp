@@ -63,8 +63,21 @@ int main(const int argc, const char** argv){
 	// cerr<<"success";
 
 	GCP gcp(ver_c,edg_c,rec_color);
-	gcp.init(cin);
-	gcp.TabuSearch(10000);
+	gcp.init();
+	
+	gcp.HybridEvolutionary(10000/GenerationSize);
 
+	// Graph g(ver_c,edg_c);
+	// g.read();
+	// Solution a,b,c;
+	// a.bind(g);
+	// a.randInit(rec_color);
+	// cerr<<"a:"<<a;
+	// b.bind(g);
+	// b.randInit(rec_color);
+	// cerr<<"b:"<<b;
+	// c.bind(g);
+	// c=crossover(a,b);
+	// cerr<<"c:"<<c;
 	return 0;
 }

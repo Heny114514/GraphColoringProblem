@@ -1,4 +1,4 @@
-time: 108ms
+time: 1363ms
 iterations: 10001
 conflicts: 10
 colors:

@@ -6,12 +6,19 @@
 using namespace std;
 
 extern unsigned int timeLimit;
+#define GenerationSize 20
+#define TabuSearchIter 100
 
 class TabuTenureTable{
 	private:
 	int vc,ctype;
 	int** table;
 	public:
+	TabuTenureTable();
+	TabuTenureTable(const TabuTenureTable &b);
+	TabuTenureTable(TabuTenureTable &&b);
+	TabuTenureTable& operator=(const TabuTenureTable &b);
+	TabuTenureTable& operator=(TabuTenureTable &&b);
 	void resize(int vc,int ctype);
 	int& operator()(int v,int c);
 	~TabuTenureTable();
@@ -19,59 +26,75 @@ class TabuTenureTable{
 
 class Graph{//利用链式前向星存储图
 	public:
-	int vc,ec,conflicts,ctype;
-	// int **adjTable;
-	vector<vector<int>> adjTable;
-	struct Vertex{
-		int head;
-		int color;
-	};
+	int vc,ec;
 	struct Edge{
 		int to,nxt;
 	};
 	vector<bool> vis;
-	vector<Vertex> vertices;
+	vector<int> head;
 	vector<Edge> edges;
+
+	Graph(int vc,int ec);
+	void add(int u,int v);//添加边
+	void read();
+	friend ostream& operator<<(ostream &out,const Graph &g);
+};
+
+class Solution{
+	public:
+	Graph *g;
+	int conflicts,ctype;
+	// int **adjTable;
+	vector<int> color;
+	vector<vector<int>> adjTable;
 	set<int> conflictVertices;//冲突顶点集合
 	TabuTenureTable ttt;//禁忌步长表
 
 	public:
-	Graph(int vc,int ec);
-	void add(int u,int v);//添加边
+	Solution();
+	~Solution()=default;
+	Solution(const Solution &b)=default;
+	Solution(Solution &&b)=default;
+	void bind(Graph& g);
+	void InitConflicts();//初始化冲突等成员变量
 	void randInit(int ctype);//随机染色
 	bool LocalSearch();//简单局部搜索
-	void read(istream &in);
 	void TabuSearch(int iter);//禁忌搜索
 	bool isConflict(int ver);//判断顶点ver是否冲突
+	friend ostream& operator<<(ostream &out,const Solution &sol);
+	Solution& operator=(const Solution &b)=default;
+	Solution& operator=(Solution &&b)=default;
 };
-ostream& operator<<(ostream &out,const Graph &g);
+Solution crossover(const Solution &a, const Solution &b);
 
-class Solution{
-	public:
-	int conflicts;
-	vector<int> color;
-	Solution();
-	Solution(Graph &g);
-	Solution& operator=(const Graph &g);
-};
-ostream& operator<<(ostream &out,const Solution &sol);
+
+// class Solution{
+// 	public:
+// 	int conflicts;
+// 	vector<int> color;
+// 	Solution();
+// 	Solution(Graph &g);
+// 	Solution& operator=(const Graph &g);
+// };
+
 
 class GCP{//GCP问题核心类
 	private:
 	int ver_c,edg_c,rec_color;
 	Graph g;
-	Solution bestSol;
+	Solution generations[GenerationSize];
+	Solution *bestSol,*worstSol;
 
 	public:
 	GCP(int vc,int ec,int rec_color);
-	void init(istream &in);//初始化
+	void init();//初始化
 	void LocalSearch(int iter=100);
 	void TabuSearch(int iter=100);
+	void HybridEvolutionary(int iter=100);
 };
 
 #endif
 
 /*
-TS在选择禁忌移动时需不需要更新非禁忌移动的ttt
-
+随机着色是否保证每种颜色都出现
 */
