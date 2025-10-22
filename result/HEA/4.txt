@@ -1,4 +1,4 @@
-time: 2241ms
+time: 2306ms
 generations: 501
 conflicts: 5
 colors:

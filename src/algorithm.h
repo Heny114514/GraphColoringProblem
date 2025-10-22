@@ -9,20 +9,20 @@ extern unsigned int timeLimit;
 #define GenerationSize 20
 #define TabuSearchIter 100
 
-class TabuTenureTable{
-	private:
-	int vc,ctype;
-	int** table;
-	public:
-	TabuTenureTable();
-	TabuTenureTable(const TabuTenureTable &b);
-	TabuTenureTable(TabuTenureTable &&b);
-	TabuTenureTable& operator=(const TabuTenureTable &b);
-	TabuTenureTable& operator=(TabuTenureTable &&b);
-	void resize(int vc,int ctype);
-	int& operator()(int v,int c);
-	~TabuTenureTable();
-};
+// class TabuTenureTable{
+// 	private:
+// 	int vc,ctype;
+// 	int** table;
+// 	public:
+// 	TabuTenureTable();
+// 	TabuTenureTable(const TabuTenureTable &b);
+// 	TabuTenureTable(TabuTenureTable &&b);
+// 	TabuTenureTable& operator=(const TabuTenureTable &b);
+// 	TabuTenureTable& operator=(TabuTenureTable &&b);
+// 	void resize(int vc,int ctype);
+// 	int& operator()(int v,int c);
+// 	~TabuTenureTable();
+// };
 
 class Graph{//利用链式前向星存储图
 	public:
@@ -48,7 +48,7 @@ class Solution{
 	vector<int> color;
 	vector<vector<int>> adjTable;
 	set<int> conflictVertices;//冲突顶点集合
-	TabuTenureTable ttt;//禁忌步长表
+	vector<vector<int>> ttt;//禁忌步长表
 
 	public:
 	Solution();

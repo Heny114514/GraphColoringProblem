@@ -39,7 +39,9 @@ void Solution::randInit(int ctype){
 void Solution::InitConflicts(){
 	adjTable.resize(g->vc);
 	for(auto &i:adjTable) i.resize(ctype,0);
-	ttt.resize(g->vc,ctype);
+	// ttt.resize(g->vc,ctype);
+	ttt.resize(g->vc);
+	for(auto &i:ttt) i.resize(ctype,0);
 	conflicts=0;
 	conflictVertices.clear();
 	g->vis.assign(g->vc,false);
@@ -175,7 +177,7 @@ void Solution::TabuSearch(int iter){
 			if(c==color[v]) continue;
 			int delta=adjTable[v][c]-adjTable[v][color[v]];
 
-			if(ttt(v,c)>iter){//禁忌
+			if(ttt[v][c]>iter){//禁忌
 				if(delta<tminDelta){
 					tminDelta=delta;
 					tmver=v;
@@ -198,6 +200,11 @@ void Solution::TabuSearch(int iter){
 		mfrom=tmfrom;
 		mto=tmto;
 	}
+	// If no move was found (e.g. conflictVertices empty), mver will still be -1.
+	// Protect against using invalid indices which causes out-of-bounds writes.
+	if(mver==-1){
+		return;
+	}
 	//更新邻接表和冲突顶点以及禁忌表
 	conflicts+=minDelta;
 	color[mver]=mto;
@@ -216,7 +223,7 @@ void Solution::TabuSearch(int iter){
 	}else{
 		conflictVertices.erase(mver);
 	}
-	ttt(mver,mfrom)=iter+rand()%10+conflicts;//更新禁忌表
+	ttt[mver][mfrom]=iter+rand()%10+conflicts;//更新禁忌表
 }
 
 void GCP::TabuSearch(int iter){
@@ -241,33 +248,33 @@ bool Solution::isConflict(int ver){
 	return adjTable[ver][color[ver]]>0;
 }
 
-TabuTenureTable::TabuTenureTable():vc(0),ctype(0),table(nullptr){}
+// TabuTenureTable::TabuTenureTable():vc(0),ctype(0),table(nullptr){}
 
-void TabuTenureTable::resize(int vc,int ctype){
-	if(table){
-		this->~TabuTenureTable();
-	}
-	this->vc=vc;
-	this->ctype=ctype;
-	table = new int*[vc];
-	for(int i=0;i<vc;i++){
-		table[i] = new int[ctype];
-		for(int j=0;j<ctype;j++){
-			table[i][j]=0;
-		}
-	}
-}
+// void TabuTenureTable::resize(int vc,int ctype){
+// 	if(table){
+// 		this->~TabuTenureTable();
+// 	}
+// 	this->vc=vc;
+// 	this->ctype=ctype;
+// 	table = new int*[vc];
+// 	for(int i=0;i<vc;i++){
+// 		table[i] = new int[ctype];
+// 		for(int j=0;j<ctype;j++){
+// 			table[i][j]=0;
+// 		}
+// 	}
+// }
 
-TabuTenureTable::~TabuTenureTable(){
-	for(int i=0;i<vc;i++){
-		delete[] table[i];
-	}
-	delete[] table;
-}
+// TabuTenureTable::~TabuTenureTable(){
+// 	for(int i=0;i<vc;i++){
+// 		delete[] table[i];
+// 	}
+// 	delete[] table;
+// }
 
-int& TabuTenureTable::operator()(int v,int c){
-	return table[v][c];
-}
+// int& TabuTenureTable::operator()(int v,int c){
+// 	return table[v][c];
+// }
 
 // Solution::Solution(const Graph* g):conflicts(0){
 // 	this->g=(Graph*)g;
@@ -295,47 +302,51 @@ Solution crossover(const Solution &a, const Solution &b){
 	child.g=a.g;
 	child.ctype=a.ctype;
 	child.color.resize(a.g->vc);
-
-	bool usedColor[a.ctype];
-	memset(usedColor,0,sizeof(usedColor));
-	set<int> colorV[2][a.ctype];
+	// Use STL containers instead of VLAs: safer and portable
+	vector<char> usedColor(a.ctype, 0);
+	vector< set<int> > colorV0(a.ctype), colorV1(a.ctype);
 	for(int v=0;v<a.g->vc;v++){
-		colorV[0][a.color[v]].insert(v);
-		colorV[1][b.color[v]].insert(v);
+		if(a.color[v] >= 0 && a.color[v] < a.ctype) colorV0[a.color[v]].insert(v);
+		if(b.color[v] >= 0 && b.color[v] < b.ctype) colorV1[b.color[v]].insert(v);
 	}
 	for(int l=0;l<a.ctype;l++){
-		int M=0;
+		// choose current side and other side
+		vector< set<int> > &cur = (l%2==0) ? colorV0 : colorV1;
+		vector< set<int> > &oth = (l%2==0) ? colorV1 : colorV0;
+		int M = 0;
 		for(int i=1;i<a.ctype;i++){
-			if(colorV[l%2][i].size()>colorV[l%2][M].size()) M=i;
+			if(cur[i].size() > cur[M].size()) M = i;
 		}
-		int color;
-		// do{
-		// 	color=rand()%a.ctype;
-		// }while(usedColor[color]);
-		int colorIndex=rand()%(a.ctype-l);
+		int color = -1;
+		int remaining = a.ctype - l;
+		if(remaining <= 0) remaining = 1; // guard
+		int colorIndex = rand() % remaining;
 		for(int i=0;i<a.ctype;i++){
 			if(usedColor[i]) continue;
-			if(colorIndex==0){
-				color=i;
-				break;
-			}
+			if(colorIndex==0){ color = i; break; }
 			colorIndex--;
 		}
-		usedColor[color]=true;
-		for(auto v:colorV[l%2][M]){
-			child.color[v]=color;
-			int index;
-			if(l%2==0){
-				index=b.color[v];
-			}else{
-				index=a.color[v];
-			}
-			colorV[1-l%2][index].erase(v);
+		if(color==-1){ // fallback
+			for(int i=0;i<a.ctype;i++) if(!usedColor[i]){ color=i; break; }
 		}
-		colorV[l%2][M].clear();
+		usedColor[color]=1;
+		// assign vertices from the largest color class on current side
+		// and remove them from the corresponding sets on the other side
+		vector<int> toErase;
+		toErase.reserve(cur[M].size());
+		for(auto v: cur[M]){
+			child.color[v] = color;
+			int index = (l%2==0) ? b.color[v] : a.color[v];
+			if(index>=0 && index < (int)oth.size()){
+				oth[index].erase(v);
+			}
+			toErase.push_back(v);
+		}
+		cur[M].clear();
 	}
+	// remaining vertices in colorV0 (original first parent's classes) assign random colors
 	for(int i=0;i<a.ctype;i++){
-		for(auto v:colorV[0][i]){
+		for(auto v: colorV0[i]){
 			child.color[v]=rand()%a.ctype;
 		}
 	}
@@ -424,54 +435,54 @@ void GCP::HybridEvolutionary(int iter){
 // 	ttt.~TabuTenureTable();
 // }
 
-TabuTenureTable::TabuTenureTable(const TabuTenureTable &b){
-	vc=b.vc;
-	ctype=b.ctype;
-	table = new int*[vc];
-	for(int i=0;i<vc;i++){
-		table[i] = new int[ctype];
-		for(int j=0;j<ctype;j++){
-			table[i][j]=b.table[i][j];
-		}
-	}
-}
+// TabuTenureTable::TabuTenureTable(const TabuTenureTable &b){
+// 	vc=b.vc;
+// 	ctype=b.ctype;
+// 	table = new int*[vc];
+// 	for(int i=0;i<vc;i++){
+// 		table[i] = new int[ctype];
+// 		for(int j=0;j<ctype;j++){
+// 			table[i][j]=b.table[i][j];
+// 		}
+// 	}
+// }
 
-TabuTenureTable& TabuTenureTable::operator=(const TabuTenureTable &b){
-	if(this==&b) return *this;
-	if(table){
-		this->~TabuTenureTable();
-	}
-	vc=b.vc;
-	ctype=b.ctype;
-	table = new int*[vc];
-	for(int i=0;i<vc;i++){
-		table[i] = new int[ctype];
-		for(int j=0;j<ctype;j++){
-			table[i][j]=b.table[i][j];
-		}
-	}
-	return *this;
-}
+// TabuTenureTable& TabuTenureTable::operator=(const TabuTenureTable &b){
+// 	if(this==&b) return *this;
+// 	if(table){
+// 		this->~TabuTenureTable();
+// 	}
+// 	vc=b.vc;
+// 	ctype=b.ctype;
+// 	table = new int*[vc];
+// 	for(int i=0;i<vc;i++){
+// 		table[i] = new int[ctype];
+// 		for(int j=0;j<ctype;j++){
+// 			table[i][j]=b.table[i][j];
+// 		}
+// 	}
+// 	return *this;
+// }
 
-TabuTenureTable::TabuTenureTable(TabuTenureTable &&b){
-	vc=b.vc;
-	ctype=b.ctype;
-	table=b.table;
-	b.vc=0;
-	b.ctype=0;
-	b.table=nullptr;
-}
+// TabuTenureTable::TabuTenureTable(TabuTenureTable &&b){
+// 	vc=b.vc;
+// 	ctype=b.ctype;
+// 	table=b.table;
+// 	b.vc=0;
+// 	b.ctype=0;
+// 	b.table=nullptr;
+// }
 
-TabuTenureTable& TabuTenureTable::operator=(TabuTenureTable &&b){
-	if(this==&b) return *this;
-	if(table){
-		this->~TabuTenureTable();
-	}
-	vc=b.vc;
-	ctype=b.ctype;
-	table = b.table;
-	b.vc=0;
-	b.ctype=0;
-	b.table=nullptr;
-	return *this;
-}
+// TabuTenureTable& TabuTenureTable::operator=(TabuTenureTable &&b){
+// 	if(this==&b) return *this;
+// 	if(table){
+// 		this->~TabuTenureTable();
+// 	}
+// 	vc=b.vc;
+// 	ctype=b.ctype;
+// 	table = b.table;
+// 	b.vc=0;
+// 	b.ctype=0;
+// 	b.table=nullptr;
+// 	return *this;
+// }
