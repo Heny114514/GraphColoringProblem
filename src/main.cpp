@@ -65,8 +65,8 @@ int main(const int argc, const char** argv){
 	GCP gcp(ver_c,edg_c,rec_color);
 	gcp.init();
 	// gcp.LocalSearch(10000);
-	// gcp.TabuSearch(10000);
-	gcp.HybridEvolutionary(10000/GenerationSize);
+	gcp.TabuSearch();
+	// gcp.HybridEvolutionary(10000/GenerationSize);
 
 	// Graph g(ver_c,edg_c);
 	// g.read();
@@ -82,3 +82,8 @@ int main(const int argc, const char** argv){
 	// cerr<<"c:"<<c;
 	return 0;
 }
+/*
+编译优化
+*平手时随机选取
+解禁条件：改进历史最优解
+*/
