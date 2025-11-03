@@ -9,120 +9,122 @@ void Graph::add(int u,int v){
 	head[u]=edges.size()-1;
 }
 
-// void Solution::randInit(int ctype){
-// 	this->ctype=ctype;
-// 	color.resize(g->vc);
-// 	maxColor.resize(g->vc,0);
-// 	// Colormax.resize(g->vc,0);
-// 	// adjTable.resize(g->vc);
-// 	// for(auto &i:adjTable) i.resize(ctype,0);
-// 	// ttt.resize(g->vc,ctype);
-// 	color[0]=maxColor[0]=0;
-// 	for(int i=1;i<g->vc;i++){
-// 		color[i]=rand()%min(maxColor[i-1]+2,ctype);
-// 		maxColor[i]=max(maxColor[i-1],color[i]);
-// 	}
-// 	// Colormax[g->vc-1]=color[g->vc-1];
-// 	// for(int i=g->vc-2;i>=0;i--){
-// 	// 	Colormax[i]=max(Colormax[i+1],color[i]);
-// 	// }
-// 	// conflicts=0;
-// 	// g->vis.assign(g->vc,false);
-// 	// for(int v=0;v<g->vc;v++){
-// 	// 	for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
-// 	// 		int to=g->edges[i].to;
-// 	// 		adjTable[v][color[to]]++;//初始化邻接表
-// 	// 		if(g->vis[to]) continue;
-// 	// 		if(color[v]==color[to]){
-// 	// 			conflicts++;
-// 	// 			conflictVertices.insert(v);
-// 	// 			conflictVertices.insert(to);
-// 	// 		}
-// 	// 	}
-// 	// 	g->vis[v]=true;
-// 	// }
-// 	InitConflicts();
-// }
-
-void Solution::randInit(int ctype){//贪心构造
-    if(!g) return;
-    this->ctype = ctype;
-    int vcnt = g->vc;
-    if(vcnt <= 0) return;
-    // if requested more colors than vertices, clamp
-    if(ctype > vcnt) ctype = vcnt, this->ctype = ctype;
-
-    color.assign(vcnt, -1);
-    maxColor.assign(vcnt, -1);
-    // greedy: introduce new colors in ascending order when allowed
-    int nextNew = 0; // next new color to introduce (0..ctype-1)
-    // iterate vertices in order 0..vc-1
-    for(int v = 0; v < vcnt; ++v){
-        int prevMax = (v == 0) ? -1 : maxColor[v-1];
-        int allowMax = std::min(prevMax + 1, ctype - 1);
-        int chosen = -1;
-
-        // if we still need to introduce nextNew and it's allowed now, do it
-        if(nextNew <= allowMax){
-            chosen = nextNew;
-            ++nextNew;
-        } else {
-            // choose color in [0..allowMax] that minimizes conflicts with already assigned neighbors
-            int best = -1;
-            int bestConf = INT_MAX;
-            // evaluate each candidate
-            for(int c = 0; c <= allowMax; ++c){
-                int conf = 0;
-                // count neighbors already assigned with same color
-                for(int e = g->head[v]; e != -1; e = g->edges[e].nxt){
-                    int u = g->edges[e].to;
-                    if(u < v && color[u] == c) ++conf;
-                }
-                if(conf < bestConf){
-                    bestConf = conf;
-                    best = c;
-                } else if(conf == bestConf && best != -1){
-                    // tie-break randomly
-                    if((rand() & 1) == 0) best = c;
-                }
-            }
-            if(best == -1) best = 0;
-            chosen = best;
-        }
-
-        color[v] = chosen;
-        maxColor[v] = std::max(prevMax, color[v]);
-    }
-    // ensure all colors introduced (should hold when vcnt >= original ctype)
-    // final safety: if nextNew < ctype, force-introduce remaining colors from the end where allowed
-    for(int c = nextNew; c < ctype; ++c){
-        // find a position from last to first where we can set color to c without violating constraint
-        bool placed = false;
-        for(int v = vcnt - 1; v >= 0; --v){
-            int prevMax = (v == 0) ? -1 : maxColor[v-1];
-            int allowMax = std::min(prevMax + 1, ctype - 1);
-            if(c <= allowMax){
-                // replace color at v with c, update maxColor from v..end
-                color[v] = c;
-                // recompute maxColor from v to end
-                for(int i = v; i < vcnt; ++i){
-                    if(i == 0) maxColor[i] = color[i];
-                    else maxColor[i] = std::max(maxColor[i-1], color[i]);
-                }
-                placed = true;
-                break;
-            }
-        }
-        if(!placed){
-            // shouldn't happen if vcnt >= ctype, but fallback: leave as is
-            break;
-        }
-    }
-
+void Solution::randInit(int ctype){
+	this->ctype=ctype;
+	color.resize(g->vc);
+	// maxColor.resize(g->vc,0);
+	// Colormax.resize(g->vc,0);
+	// adjTable.resize(g->vc);
+	// for(auto &i:adjTable) i.resize(ctype,0);
+	// ttt.resize(g->vc,ctype);
+	// color[0]=maxColor[0]=0;
+	for(int i=0;i<g->vc;i++){
+		color[i]=rand()%ctype;
+		// maxColor[i]=max(maxColor[i-1],color[i]);
+	}
+	// Colormax[g->vc-1]=color[g->vc-1];
+	// for(int i=g->vc-2;i>=0;i--){
+	// 	Colormax[i]=max(Colormax[i+1],color[i]);
+	// }
+	// conflicts=0;
+	// g->vis.assign(g->vc,false);
+	// for(int v=0;v<g->vc;v++){
+	// 	for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
+	// 		int to=g->edges[i].to;
+	// 		adjTable[v][color[to]]++;//初始化邻接表
+	// 		if(g->vis[to]) continue;
+	// 		if(color[v]==color[to]){
+	// 			conflicts++;
+	// 			conflictVertices.insert(v);
+	// 			conflictVertices.insert(to);
+	// 		}
+	// 	}
+	// 	g->vis[v]=true;
+	// }
 	InitConflicts();
 }
 
+// void Solution::randInit(int ctype){//贪心构造
+//     if(!g) return;
+//     this->ctype = ctype;
+//     int vcnt = g->vc;
+//     if(vcnt <= 0) return;
+//     // if requested more colors than vertices, clamp
+//     if(ctype > vcnt) ctype = vcnt, this->ctype = ctype;
+
+//     color.assign(vcnt, -1);
+//     maxColor.assign(vcnt, -1);
+//     // greedy: introduce new colors in ascending order when allowed
+//     int nextNew = 0; // next new color to introduce (0..ctype-1)
+//     // iterate vertices in order 0..vc-1
+//     for(int v = 0; v < vcnt; ++v){
+//         int prevMax = (v == 0) ? -1 : maxColor[v-1];
+//         int allowMax = std::min(prevMax + 1, ctype - 1);
+//         int chosen = -1;
+
+//         // if we still need to introduce nextNew and it's allowed now, do it
+//         if(nextNew <= allowMax){
+//             chosen = nextNew;
+//             ++nextNew;
+//         } else {
+//             // choose color in [0..allowMax] that minimizes conflicts with already assigned neighbors
+//             int best = -1;
+//             int bestConf = INT_MAX;
+//             // evaluate each candidate
+//             for(int c = 0; c <= allowMax; ++c){
+//                 int conf = 0;
+//                 // count neighbors already assigned with same color
+//                 for(int e = g->head[v]; e != -1; e = g->edges[e].nxt){
+//                     int u = g->edges[e].to;
+//                     if(u < v && color[u] == c) ++conf;
+//                 }
+//                 if(conf < bestConf){
+//                     bestConf = conf;
+//                     best = c;
+//                 } else if(conf == bestConf && best != -1){
+//                     // tie-break randomly
+//                     if((rand() & 1) == 0) best = c;
+//                 }
+//             }
+//             if(best == -1) best = 0;
+//             chosen = best;
+//         }
+
+//         color[v] = chosen;
+//         maxColor[v] = std::max(prevMax, color[v]);
+//     }
+//     // ensure all colors introduced (should hold when vcnt >= original ctype)
+//     // final safety: if nextNew < ctype, force-introduce remaining colors from the end where allowed
+//     for(int c = nextNew; c < ctype; ++c){
+//         // find a position from last to first where we can set color to c without violating constraint
+//         bool placed = false;
+//         for(int v = vcnt - 1; v >= 0; --v){
+//             int prevMax = (v == 0) ? -1 : maxColor[v-1];
+//             int allowMax = std::min(prevMax + 1, ctype - 1);
+//             if(c <= allowMax){
+//                 // replace color at v with c, update maxColor from v..end
+//                 color[v] = c;
+//                 // recompute maxColor from v to end
+//                 for(int i = v; i < vcnt; ++i){
+//                     if(i == 0) maxColor[i] = color[i];
+//                     else maxColor[i] = std::max(maxColor[i-1], color[i]);
+//                 }
+//                 placed = true;
+//                 break;
+//             }
+//         }
+//         if(!placed){
+//             // shouldn't happen if vcnt >= ctype, but fallback: leave as is
+//             break;
+//         }
+//     }
+
+// 	InitConflicts();
+// }
+
 void Solution::InitConflicts(){
+	standardizedColorTable.resize(ctype,-1);
+	isMinVerofColorSet.resize(g->vc,false);
 	adjTable.resize(g->vc);
 	for(auto &i:adjTable) i.resize(ctype,0);
 	// ttt.resize(g->vc,ctype);
@@ -144,6 +146,8 @@ void Solution::InitConflicts(){
 		}
 		g->vis[v]=true;
 	}
+	InitStandardize();
+	// standardization();
 }
 
 GCP::GCP(int vc,int ec,int rec_color):g(vc,ec),ver_c(vc),edg_c(ec),rec_color(rec_color){
@@ -259,14 +263,30 @@ void Solution::TabuSearch(int iter,int bestEver){
 	int minDelta=1,mver=-1,mfrom=-1,mto=-1;
 	int tminDelta=1,tmver=-1,tmfrom=-1,tmto=-1;
 	for(auto v:conflictVertices){//寻找最优移动
-		if(v==0||color[v]==maxColor[v-1]+1) continue;
-		for(int c=0;c<min(ctype,maxColor[v]+2);c++){
+		// if(v==0||color[v]==maxColor[v-1]+1) continue;
+		// auto scttemp=standardizedColorTable;
+		// shared_ptr<decltype(standardizedColorTable)> sct_ptr(&standardizedColorTable);
+		vector<int> *sct_ptr=&standardizedColorTable;
+		for(int c=0;c<ctype;c++){
 		// for(int c=0;c<ctype;c++){
 			if(c==color[v]) continue;
+			if(isMinVerofColorSet[v]){
+				int ctemp=color[v];
+				color[v]=c;
+				// sct_ptr=make_shared<decltype(standardizedColorTable)>(ctype,-1);
+				sct_ptr=new vector<int>(ctype,-1);
+				// standardizedColorTable.assign(ctype,-1);
+				for(int i=0,j=0;i<g->vc;i++){
+					if(sct_ptr->at(color[i])==-1){
+						sct_ptr->at(color[i])=j++;
+					}
+				}
+				color[v]=ctemp;
+			}
 			// if(c>maxColor[v]) continue;
 			int delta=adjTable[v][c]-adjTable[v][color[v]];
 
-			if(ttt[v][c]>iter){//禁忌
+			if(ttt[v][(*sct_ptr)[c]]>iter){//禁忌
 				if(delta<tminDelta){
 					tminDelta=delta;
 					tmver=v;
@@ -281,7 +301,14 @@ void Solution::TabuSearch(int iter,int bestEver){
 					mto=c;
 				}
 			}
+			if(isMinVerofColorSet[v]){
+				delete sct_ptr;
+				sct_ptr=nullptr;
+			}
 		}
+		// if(isMinVerofColorSet[v]){
+		// 	standardizedColorTable=scttemp;
+		// }
 	}
 	if(tminDelta<minDelta&&conflicts-tminDelta<bestEver){//满足禁忌条件
 		minDelta=tminDelta;
@@ -312,11 +339,11 @@ void Solution::TabuSearch(int iter,int bestEver){
 	}else{
 		conflictVertices.erase(mver);
 	}
-	//更新maxColor
-	for(int i=mver;i<g->vc;i++){
-		maxColor[i]=max(maxColor[i-1],color[mver]);
+	ttt[mver][standardizedColorTable[mfrom]]=iter+rand()%10+conflicts;//更新禁忌表
+	//更新规范颜色表
+	if(isMinVerofColorSet[mver]){
+		InitStandardize();
 	}
-	ttt[mver][mfrom]=iter+rand()%10+conflicts;//更新禁忌表
 }
 
 void GCP::TabuSearch(int iter){
@@ -584,3 +611,29 @@ void GCP::HybridEvolutionary(int iter){
 // 	b.table=nullptr;
 // 	return *this;
 // }
+
+void Solution::InitStandardize(){
+	isMinVerofColorSet.assign(g->vc,false);
+	standardizedColorTable.assign(ctype,-1);
+	for(int i=0,j=0;i<g->vc;i++){
+		if(standardizedColorTable[color[i]]==-1){
+			standardizedColorTable[color[i]]=j++;
+			isMinVerofColorSet[i]=true;
+		}
+	}
+}
+
+void Solution::Check(){
+	int cnt=0;
+	for(int i=0;i<g->vc;i++){
+		if(isMinVerofColorSet[i]) cnt++;
+	}
+	if(cnt!=ctype){
+		cerr<<"Error in isMinVerofColorSet\n";
+	}
+	for(int i=0;i<ctype;i++){
+		if(standardizedColorTable[i]==-1){
+			cerr<<"Error in standardizedColorTable\n";
+		}
+	}
+}

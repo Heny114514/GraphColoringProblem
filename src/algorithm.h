@@ -49,8 +49,8 @@ class Solution{
 	vector<vector<int>> adjTable;
 	set<int> conflictVertices;//冲突顶点集合
 	vector<vector<int>> ttt;//禁忌步长表
-	vector<int> maxColor;//前缀最大颜色
-	// vector<int> Colormax;//后缀最大颜色
+	vector<int> standardizedColorTable;//规范颜色表
+	vector<bool> isMinVerofColorSet;//顶点是否是对应着色集的最小元
 
 	public:
 	Solution();
@@ -63,6 +63,8 @@ class Solution{
 	bool LocalSearch();//简单局部搜索
 	void TabuSearch(int iter,int bestEver);//禁忌搜索
 	bool isConflict(int ver);//判断顶点ver是否冲突
+	void InitStandardize();//颜色规范表初始化
+	void Check();//检查属性是否正确
 	friend ostream& operator<<(ostream &out,const Solution &sol);
 	Solution& operator=(const Solution &b)=default;
 	Solution& operator=(Solution &&b)=default;
@@ -101,18 +103,6 @@ class GCP{//GCP问题核心类
 考虑轮换对称性：
 将顶点编号与颜色编号排序对应
 
-约束：编号为i的顶点着色编号不能超过之前顶点最大着色+1
-color[i]<=maxColor[i-1]+1;
-改变顶点i颜色，影响
-maxColor[i,vc-1]
-如果color[i]>maxColor[k]时,maxColor[k]=color[i];
-如果maxColor[i]==color[i]并且color[i]变小（color[i]<maxColor[i-1]），则，则顶点i+1着色可能违反约束
-color[i+1]<=maxColor[i]+1
-maxColor[i]>=color[i+1]-1
-
-i后顶点着色不受影响
-
-maxColor: 1 1 2 2 2 3 3 3 3 3 4 4
-color:    1 1 2 1 2 3 2 1 3 2 4 2
-maxColor必然非递减
+构建规范颜色表：
+对每种颜色，记录其出现的最小的定点编号，再按此编号顺序重新排序颜色
 */
