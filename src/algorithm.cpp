@@ -443,7 +443,7 @@ void Solution::TabuSearch(int iter,int bestEver){
             // 临时 local_sct 会在下一次循环迭代自动销毁
         }
     }
-    if(tminDelta < minDelta && conflicts + tminDelta < bestEver){ // 满足禁忌接受条件
+    if(tminDelta < minDelta && conflicts - tminDelta < bestEver){ // 满足禁忌接受条件
         minDelta = tminDelta;
         mver = tmver;
         mfrom = tmfrom;
@@ -496,7 +496,7 @@ void Solution::TabuSearch(int iter,int bestEver){
     //     // 若原始规范表未覆盖 mfrom（非常罕见），重新标准化再取索引
     //     InitStandardize();
     // }
-    // ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
+    ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
 
     // 若移动影响了某个颜色的最小元，更新标准化信息
     if(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver){
