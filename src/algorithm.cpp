@@ -123,8 +123,9 @@ void Solution::randInit(int ctype){
 // }
 
 void Solution::InitConflicts(){
+	minVerofColorSet.resize(ctype,-1);
 	standardizedColorTable.resize(ctype,-1);
-	isMinVerofColorSet.resize(g->vc,false);
+	// isMinVerofColorSet.resize(g->vc,false);
 	adjTable.resize(g->vc);
 	for(auto &i:adjTable) i.resize(ctype,0);
 	// ttt.resize(g->vc,ctype);
@@ -147,6 +148,10 @@ void Solution::InitConflicts(){
 		g->vis[v]=true;
 	}
 	InitStandardize();
+
+	#ifdef DEBUG
+	if(!Check()) cerr<<"init error!\n";
+	#endif
 	// standardization();
 }
 
@@ -259,91 +264,253 @@ void GCP::LocalSearch(int iter){
 	cout<<*bestSol;
 }
 
+// void Solution::TabuSearch(int iter,int bestEver){
+// 	int minDelta=0x7fffffff,mver=-1,mfrom=-1,mto=-1;
+// 	int tminDelta=0x7fffffff,tmver=-1,tmfrom=-1,tmto=-1;
+// 	for(auto v:conflictVertices){//寻找最优移动
+// 		// if(v==0||color[v]==maxColor[v-1]+1) continue;
+// 		// auto scttemp=standardizedColorTable;
+// 		// shared_ptr<decltype(standardizedColorTable)> sct_ptr(&standardizedColorTable);
+// 		vector<int> *sct_ptr=&standardizedColorTable;
+// 		vector<int> local_sct;
+// 		for(int c=0;c<ctype;c++){
+// 		// for(int c=0;c<ctype;c++){
+// 			if(c==color[v]) continue;
+// 			if(isMinVerofColorSet[v]){
+// 				int ctemp=color[v];
+// 				color[v]=c;
+// 				// sct_ptr=make_shared<decltype(standardizedColorTable)>(ctype,-1);
+// 				// sct_ptr=new vector<int>(ctype,-1);
+// 				local_sct.resize(ctype,-1);
+// 				// standardizedColorTable.assign(ctype,-1);
+// 				for(int i=0,j=0;i<g->vc;i++){
+// 					if(local_sct[color[i]]==-1){
+// 						local_sct[color[i]]=j++;
+// 					}
+// 				}
+// 				color[v]=ctemp;
+// 				sct_ptr=&local_sct;
+// 			}
+// 			// if(c>maxColor[v]) continue;
+// 			int delta=adjTable[v][c]-adjTable[v][color[v]];
+
+// 			if(ttt[v][(*sct_ptr)[c]]>iter){//禁忌
+// 				if(delta<tminDelta){
+// 					tminDelta=delta;
+// 					tmver=v;
+// 					tmfrom=color[v];
+// 					tmto=c;
+// 				}
+// 			}else{
+// 				if(delta<minDelta){
+// 					minDelta=delta;
+// 					mver=v;
+// 					mfrom=color[v];
+// 					mto=c;
+// 				}
+// 			}
+// 			// if(isMinVerofColorSet[v]){
+// 			// 	delete sct_ptr;
+// 			// 	sct_ptr=nullptr;
+// 			// }
+// 		}
+// 		// if(isMinVerofColorSet[v]){
+// 		// 	standardizedColorTable=scttemp;
+// 		// }
+// 	}
+// 	if(tminDelta<minDelta&&conflicts-tminDelta<bestEver){//满足禁忌条件
+// 		minDelta=tminDelta;
+// 		mver=tmver;
+// 		mfrom=tmfrom;
+// 		mto=tmto;
+// 	}
+// 	// If no move was found (e.g. conflictVertices empty), mver will still be -1.
+// 	// Protect against using invalid indices which causes out-of-bounds writes.
+// 	if(mver==-1){
+// 		return;
+// 	}
+// 	//更新邻接表和冲突顶点以及禁忌表
+// 	conflicts+=minDelta;
+
+// 	color[mver]=mto;
+// 	for(int i=g->head[mver];i!=-1;i=g->edges[i].nxt){
+// 		int to=g->edges[i].to;
+// 		adjTable[to][mfrom]--;
+// 		adjTable[to][mto]++;
+// 		if(isConflict(to)){
+// 			conflictVertices.insert(to);
+// 		}else{
+// 			conflictVertices.erase(to);
+// 		}
+// 	}
+// 	if(isConflict(mver)){
+// 		conflictVertices.insert(mver);
+// 	}else{
+// 		conflictVertices.erase(mver);
+// 	}
+// 	ttt[mver][standardizedColorTable[mfrom]]=iter+rand()%10+conflicts;//更新禁忌表
+// 	//更新规范颜色表
+// 	if(isMinVerofColorSet[mver]){
+// 		InitStandardize();
+// 	}
+
+// 	#ifdef DEBUG
+// 	Check();//调试用，检查冲突数是否正确
+// 	#endif
+// }
+
 void Solution::TabuSearch(int iter,int bestEver){
-	int minDelta=1,mver=-1,mfrom=-1,mto=-1;
-	int tminDelta=1,tmver=-1,tmfrom=-1,tmto=-1;
-	for(auto v:conflictVertices){//寻找最优移动
-		// if(v==0||color[v]==maxColor[v-1]+1) continue;
-		// auto scttemp=standardizedColorTable;
-		// shared_ptr<decltype(standardizedColorTable)> sct_ptr(&standardizedColorTable);
-		vector<int> *sct_ptr=&standardizedColorTable;
-		for(int c=0;c<ctype;c++){
-		// for(int c=0;c<ctype;c++){
-			if(c==color[v]) continue;
-			if(isMinVerofColorSet[v]){
-				int ctemp=color[v];
-				color[v]=c;
-				// sct_ptr=make_shared<decltype(standardizedColorTable)>(ctype,-1);
-				sct_ptr=new vector<int>(ctype,-1);
-				// standardizedColorTable.assign(ctype,-1);
-				for(int i=0,j=0;i<g->vc;i++){
-					if(sct_ptr->at(color[i])==-1){
-						sct_ptr->at(color[i])=j++;
+    int minDelta=0x7fffffff,mver=-1,mfrom=-1,mto=-1;
+    int tminDelta=0x7fffffff,tmver=-1,tmfrom=-1,tmto=-1;
+    for(auto v:conflictVertices){//寻找最优移动
+        // 为每个 v 在内层循环提供一个默认指向全局标准化表的指针
+        for(int c=0;c<ctype;c++){
+            if(c==color[v]) continue;
+
+            // 准备用于禁忌表索引的标准化映射指针
+            vector<int> local_sct;           // 若需要，存放临时映射
+            vector<int> *sct_ptr = &standardizedColorTable;
+
+            if(minVerofColorSet[color[v]]==v||minVerofColorSet[c]>v){
+                // 评估 v 改色后标准化映射
+                int ctemp = color[v];
+                color[v] = c;
+                local_sct.assign(ctype, -1);
+				int maxused=0;
+                for(int i=0; i<g->vc; ++i){
+                    int col = color[i];
+                    if(local_sct[col] == -1){
+                        local_sct[col] = maxused++;
+                    }
+                }
+				if(maxused<ctype){
+					for(int c=0;c<ctype;c++){
+						if(local_sct[c]==-1){
+							local_sct[c]=maxused++;
+						}
 					}
 				}
-				color[v]=ctemp;
-			}
-			// if(c>maxColor[v]) continue;
-			int delta=adjTable[v][c]-adjTable[v][color[v]];
+                // // 补齐所有未出现的颜色，保证映射覆盖 0..ctype-1
+                // for(int old=0, j=0; old<ctype; ++old){
+                //     // find next unused index by scanning local_sct (j not used here), simpler fill sequentially
+                // }
+                // 上面循环没有实际填充剩余项，改用下面方式：
+                // {
+                //     int nextIdx = 0;
+                //     for(int old=0; old<ctype; ++old){
+                //         if(local_sct[old] != -1) continue;
+                //         // find current max used index
+                //         // compute next available index as count of already assigned
+                //     }
+                //     // 更直接：统计已有最大 j 值并逐一赋值
+                //     int maxAssigned = -1;
+                //     for(int old=0; old<ctype; ++old) if(local_sct[old] > maxAssigned) maxAssigned = local_sct[old];
+                //     int start = (maxAssigned >= 0) ? (maxAssigned + 1) : 0;
+                //     for(int old=0; old<ctype; ++old){
+                //         if(local_sct[old] == -1) local_sct[old] = start++;
+                //     }
+                // }
 
-			if(ttt[v][(*sct_ptr)[c]]>iter){//禁忌
-				if(delta<tminDelta){
-					tminDelta=delta;
-					tmver=v;
-					tmfrom=color[v];
-					tmto=c;
-				}
-			}else{
-				if(delta<minDelta){
-					minDelta=delta;
-					mver=v;
-					mfrom=color[v];
-					mto=c;
-				}
-			}
-			if(isMinVerofColorSet[v]){
-				delete sct_ptr;
-				sct_ptr=nullptr;
-			}
-		}
-		// if(isMinVerofColorSet[v]){
-		// 	standardizedColorTable=scttemp;
-		// }
+                color[v] = ctemp;
+                sct_ptr = &local_sct; // 使用临时映射
+            }
+
+            // 计算 delta：变更 v 的颜色会导致的冲突数变化
+            int delta = adjTable[v][c] - adjTable[v][color[v]];
+
+            // 使用临时/全局标准化映射来检查禁忌
+            int sct_index = (*sct_ptr)[c];
+            if(sct_index < 0 || sct_index >= ctype){
+                // 防御：若映射未覆盖此颜色，跳过该候选（安全）
+                continue;
+            }
+
+            if(ttt[v][sct_index] > iter){ // 禁忌
+                if(delta < tminDelta){
+                    tminDelta = delta;
+                    tmver = v;
+                    tmfrom = color[v];
+                    tmto = c;
+                }
+            }else{
+                if(delta < minDelta){
+                    minDelta = delta;
+                    mver = v;
+                    mfrom = color[v];
+                    mto = c;
+                }
+            }
+            // 临时 local_sct 会在下一次循环迭代自动销毁
+        }
+    }
+    if(tminDelta < minDelta && conflicts + tminDelta < bestEver){ // 满足禁忌接受条件
+        minDelta = tminDelta;
+        mver = tmver;
+        mfrom = tmfrom;
+        mto = tmto;
+    }
+    // 如果没有找到合法移动，直接返回
+    if(mver == -1){
+        return;
+    }
+
+    // 应用移动：先更新颜色与邻接表，再更新冲突计数（以避免时序不一致）
+    // 更新邻接表（邻居的统计）和 conflictVertices
+    // 先保存旧值以便调试/检查
+    int oldColor = mfrom;
+    int newColor = mto;
+
+    // 将顶点 mver 的颜色更新为新颜色
+    color[mver] = newColor;
+
+    // 对所有邻居调整它们对 mver 颜色统计
+    for(int i = g->head[mver]; i != -1; i = g->edges[i].nxt){
+        int to = g->edges[i].to;
+        // 减去旧颜色计数，增加新颜色计数
+        adjTable[to][oldColor]--;
+        adjTable[to][newColor]++;
+        // 更新 conflictVertices（基于邻居自身颜色与其统计）
+        if(isConflict(to)){
+            conflictVertices.insert(to);
+        }else{
+            conflictVertices.erase(to);
+        }
+    }
+
+    // 更新 mver 本身是否在冲突集合中（其 adjTable 行未变，但其颜色改变）
+    if(isConflict(mver)){
+        conflictVertices.insert(mver);
+    }else{
+        conflictVertices.erase(mver);
+    }
+
+    // 现在安全地更新全局冲突计数（使用之前计算的 minDelta）
+    conflicts += minDelta;
+
+    // 更新禁忌表：使用当前（移动前或移动后语义需一致）的 standardizedColorTable 索引
+    // 确保 standardizedColorTable 覆盖所有颜色（不存在 -1）
+    // if((int)standardizedColorTable.size() != ctype){
+    //     InitStandardize();
+    // }
+    // if(standardizedColorTable[mfrom] < 0 || standardizedColorTable[mfrom] >= ctype){
+    //     // 若原始规范表未覆盖 mfrom（非常罕见），重新标准化再取索引
+    //     InitStandardize();
+    // }
+    // ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
+
+    // 若移动影响了某个颜色的最小元，更新标准化信息
+    if(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver){
+        InitStandardize();
+    }
+
+	#ifdef DEBUG
+	if(!Check()){
+		cerr<<"in TabuSearch\n";
+		cerr<<"mver: "<<mver<<" mfrom: "<<mfrom<<" mto: "<<mto<<"\n";
+		cerr<<"condition: "<<(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver)<<"\n";
+		// cerr<<"minver of "
 	}
-	if(tminDelta<minDelta&&conflicts-tminDelta<bestEver){//满足禁忌条件
-		minDelta=tminDelta;
-		mver=tmver;
-		mfrom=tmfrom;
-		mto=tmto;
-	}
-	// If no move was found (e.g. conflictVertices empty), mver will still be -1.
-	// Protect against using invalid indices which causes out-of-bounds writes.
-	if(mver==-1){
-		return;
-	}
-	//更新邻接表和冲突顶点以及禁忌表
-	conflicts+=minDelta;
-	color[mver]=mto;
-	for(int i=g->head[mver];i!=-1;i=g->edges[i].nxt){
-		int to=g->edges[i].to;
-		adjTable[to][mfrom]--;
-		adjTable[to][mto]++;
-		if(isConflict(to)){
-			conflictVertices.insert(to);
-		}else{
-			conflictVertices.erase(to);
-		}
-	}
-	if(isConflict(mver)){
-		conflictVertices.insert(mver);
-	}else{
-		conflictVertices.erase(mver);
-	}
-	ttt[mver][standardizedColorTable[mfrom]]=iter+rand()%10+conflicts;//更新禁忌表
-	//更新规范颜色表
-	if(isMinVerofColorSet[mver]){
-		InitStandardize();
-	}
+	#endif
 }
 
 void GCP::TabuSearch(int iter){
@@ -613,27 +780,89 @@ void GCP::HybridEvolutionary(int iter){
 // }
 
 void Solution::InitStandardize(){
-	isMinVerofColorSet.assign(g->vc,false);
+	// isMinVerofColorSet.assign(g->vc,false);
 	standardizedColorTable.assign(ctype,-1);
-	for(int i=0,j=0;i<g->vc;i++){
+	minVerofColorSet.assign(ctype,-1);
+	int maxused=0;
+	for(int i=0;i<g->vc;i++){
 		if(standardizedColorTable[color[i]]==-1){
-			standardizedColorTable[color[i]]=j++;
-			isMinVerofColorSet[i]=true;
+			standardizedColorTable[color[i]]=maxused++;
+			// isMinVerofColorSet[i]=true;
+			minVerofColorSet[color[i]]=i;
+		}
+	}
+	if(maxused<ctype){
+		for(int c=0;c<ctype;c++){
+			if(standardizedColorTable[c]==-1){
+				standardizedColorTable[c]=maxused++;
+			}
 		}
 	}
 }
 
-void Solution::Check(){
-	int cnt=0;
-	for(int i=0;i<g->vc;i++){
-		if(isMinVerofColorSet[i]) cnt++;
+#ifdef DEBUG
+bool Solution::Check(){
+	//检查冲突数
+	int conf=0;
+	g->vis.assign(g->vc,false);
+	for(int v=0;v<g->vc;v++){
+		for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
+			int to=g->edges[i].to;
+			if(g->vis[to]) continue;
+			if(color[v]==color[to]){
+				conf++;
+				// g->vis[to]=true;
+				
+			}
+		}
+		g->vis[v]=true;
 	}
-	if(cnt!=ctype){
-		cerr<<"Error in isMinVerofColorSet\n";
+	if(conf!=conflicts){
+		cerr<<"conflict error! calculated: "<<conf<<" stored: "<<conflicts<<endl;
+		return false;
 	}
-	for(int i=0;i<ctype;i++){
-		if(standardizedColorTable[i]==-1){
-			cerr<<"Error in standardizedColorTable\n";
+	//检查邻接表
+	for(int v=0;v<g->vc;v++){
+		vector<int> adjtemp(ctype,0);
+		for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
+			int to=g->edges[i].to;
+			adjtemp[color[to]]++;
+		}
+		for(int c=0;c<ctype;c++){
+			if(adjtemp[c]!=adjTable[v][c]){
+				cerr<<"adjTable error at vertex "<<v<<" color "<<c<<": calculated "<<adjtemp[c]<<" stored "<<adjTable[v][c]<<endl;\
+				return false;
+			}
 		}
 	}
+	//检查冲突顶点
+	for(auto v:conflictVertices){
+		if(!isConflict(v)){
+			cerr<<"conflictVertices error at vertex "<<v<<endl;
+			return false;
+		}
+	}
+	//检查颜色规范表
+	vector<int> scttemp(ctype,-1);
+	int maxused=0;
+	for(int i=0;i<g->vc;i++){
+		if(scttemp[color[i]]==-1){
+			scttemp[color[i]]=maxused++;
+		}
+	}
+	if(maxused<ctype){
+		for(int c=0;c<ctype;c++){
+			if(scttemp[c]==-1){
+				scttemp[c]=maxused++;
+			}
+		}
+	}
+	for(int i=0;i<ctype;i++){
+		if(scttemp[i]!=standardizedColorTable[i]){
+			cerr<<"standardizedColorTable error at color "<<i<<": calculated "<<scttemp[i]<<" stored "<<standardizedColorTable[i]<<endl;
+			return false;
+		}
+	}
+	return true;
 }
+#endif
