@@ -67,6 +67,7 @@ int main(const int argc, const char** argv){
 	// gcp.LocalSearch(10000);
 	gcp.TabuSearch();
 	// gcp.HybridEvolutionary(10000/GenerationSize);
+	// gcp.HybridEvolutionary();
 
 	// Graph g(ver_c,edg_c);
 	// g.read();

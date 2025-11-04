@@ -9,7 +9,8 @@ extern unsigned int timeLimit;
 #define GenerationSize 20
 #define TabuSearchIter 100
 // #define DEBUG
-#define DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+// #define DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+
 
 // class TabuTenureTable{
 // 	private:
@@ -101,7 +102,7 @@ class GCP{//GCP问题核心类
 	void init();//初始化
 	void LocalSearch(int iter=100);
 	void TabuSearch(int iter=0);
-	void HybridEvolutionary(int iter=100);
+	void HybridEvolutionary(int iter=0);
 };
 
 #endif

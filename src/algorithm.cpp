@@ -1,4 +1,7 @@
 #include"algorithm.h"
+#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+ofstream cdb("debug_chosen_critical_one_move.txt",ios::out);
+#endif
 Graph::Graph(int vc,int ec):vc(vc),ec(ec){
 	vis.resize(vc,false);
 	head.resize(vc,-1);
@@ -360,6 +363,10 @@ void GCP::LocalSearch(int iter){
 // }
 
 void Solution::TabuSearch(int iter,int bestEver){
+	#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+	bool ifChooseTabu=false;
+	#endif
+
     int minDelta=0x7fffffff,mver=-1,mfrom=-1,mto=-1;
     int tminDelta=0x7fffffff,tmver=-1,tmfrom=-1,tmto=-1;
     for(auto v:conflictVertices){//寻找最优移动
@@ -448,9 +455,17 @@ void Solution::TabuSearch(int iter,int bestEver){
         mver = tmver;
         mfrom = tmfrom;
         mto = tmto;
+
+		#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+		ifChooseTabu=true;
+		#endif
     }
     // 如果没有找到合法移动，直接返回
     if(mver == -1){
+		#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+		cdb<<"on iter "<<iter<<", no valid move found\n";
+		#endif
+
         return;
     }
 
@@ -510,6 +525,10 @@ void Solution::TabuSearch(int iter,int bestEver){
 		cerr<<"condition: "<<(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver)<<"\n";
 		// cerr<<"minver of "
 	}
+	#endif
+
+	#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
+	cdb<<"on iter "<<iter<<", move vertex "<<mver<<" from "<<mfrom<<" to "<<mto<<" with delta "<<minDelta<<"; "<<(ifChooseTabu?"tabu\n":"\n");
 	#endif
 }
 
@@ -660,7 +679,7 @@ void GCP::HybridEvolutionary(int iter){
 		// 	worstSol=generations+i;
 	}
 	int i=0;
-	for(;i<iter;i++){
+	for(;i<iter||iter==0;i++){
 		if(Timestamp::getTimestampMs()-start>timeLimit) break;
 		//选择两个父代
 		int a=rand()%GenerationSize;
