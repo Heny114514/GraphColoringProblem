@@ -433,14 +433,14 @@ void Solution::TabuSearch(int iter,int bestEver){
             }
 
             if(ttt[v][sct_index] > iter){ // 禁忌
-                if(delta < tminDelta){
+                if(delta < tminDelta||delta==tminDelta&&(rand()%2==0)){
                     tminDelta = delta;
                     tmver = v;
                     tmfrom = color[v];
                     tmto = c;
                 }
             }else{
-                if(delta < minDelta){
+                if(delta < minDelta||delta==minDelta&&(rand()%2==0)){
                     minDelta = delta;
                     mver = v;
                     mfrom = color[v];
@@ -450,7 +450,7 @@ void Solution::TabuSearch(int iter,int bestEver){
             // 临时 local_sct 会在下一次循环迭代自动销毁
         }
     }
-    if(tminDelta < minDelta && conflicts - tminDelta < bestEver){ // 满足禁忌接受条件
+    if(tminDelta < minDelta && conflicts + tminDelta < bestEver ){ // 满足禁忌接受条件
         minDelta = tminDelta;
         mver = tmver;
         mfrom = tmfrom;
@@ -511,12 +511,13 @@ void Solution::TabuSearch(int iter,int bestEver){
     //     // 若原始规范表未覆盖 mfrom（非常罕见），重新标准化再取索引
     //     InitStandardize();
     // }
-    ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
 
     // 若移动影响了某个颜色的最小元，更新标准化信息
     if(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver){
         InitStandardize();
     }
+
+	ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
 
 	#ifdef DEBUG
 	if(!Check()){
@@ -528,31 +529,40 @@ void Solution::TabuSearch(int iter,int bestEver){
 	#endif
 
 	#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
-	cdb<<"on iter "<<iter<<", move vertex "<<mver<<" from "<<mfrom<<" to "<<mto<<" with delta "<<minDelta<<"; "<<(ifChooseTabu?"tabu\n":"\n");
+	cdb<<"on iter "<<iter<<", move vertex "<<mver<<" from "<<mfrom<<" to "<<mto<<" with delta "<<minDelta<<" and tabu tenure "<<ttt[mver][standardizedColorTable[mfrom]]-iter<<"; ";
+	if(ifChooseTabu) cdb<<" tabu";
+	cdb<<"\nnow conf="<<conflicts<<" bestConf="<<bestEver;
+	cdb<<endl;
 	#endif
 }
 
 void GCP::TabuSearch(int iter){
 	generations[0].randInit(rec_color);
-	bestSol=generations;
+	// bestSol=generations;
+	int bestConf=generations[0].conflicts;
+	vector<int> bestColor=generations[0].color;
 	auto start=Timestamp::getTimestampMs();
 	int i;
 	for(i=0;i<iter||iter==0;i++){
 		if(Timestamp::getTimestampMs()-start>timeLimit) break;
-		generations[0].TabuSearch(i,bestSol->conflicts);
-		if(bestSol->conflicts>generations[0].conflicts){
-			bestSol=generations;
+		generations[0].TabuSearch(i,bestConf);
+		if(bestConf>generations[0].conflicts){
+			bestConf=generations[0].conflicts;
+			bestColor=generations[0].color;
 		}
 		if(generations[0].conflicts==0) break;
 	}
 	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
 	cout<<"iterations: "<<i+1<<endl;
 	vector<bool> used(rec_color,false);
-	for(auto c:bestSol->color) used[c]=true;
+	for(auto c:bestColor) used[c]=true;
 	int used_c=0;
 	for(auto u:used) if(u) used_c++;
 	cout<<"color types: "<<used_c<<endl;
-	cout<<(*bestSol);
+	cout<<"conflicts: "<<bestConf<<"\ncoloring:\n";
+	for(auto c:bestColor){
+		cout<<c<<endl;
+	}
 }
 
 bool Solution::isConflict(int ver){
