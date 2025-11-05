@@ -511,13 +511,13 @@ void Solution::TabuSearch(int iter,int bestEver){
     //     // 若原始规范表未覆盖 mfrom（非常罕见），重新标准化再取索引
     //     InitStandardize();
     // }
+	ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
 
     // 若移动影响了某个颜色的最小元，更新标准化信息
     if(minVerofColorSet[mfrom]==mver||minVerofColorSet[mto]>mver){
         InitStandardize();
     }
 
-	ttt[mver][standardizedColorTable[mfrom]] = iter + rand()%10 + conflicts; // 更新禁忌表
 
 	#ifdef DEBUG
 	if(!Check()){

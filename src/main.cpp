@@ -1,5 +1,11 @@
 #include<bits/stdc++.h>
 #include"algorithm.h"
+
+//选择使用的搜索算法，都定义时选择第一个
+#define USING_TS
+// #define USING_HEA
+
+
 using namespace std;
 unsigned int timeLimit=5000,randSeed=0;
 int ver_c,edg_c,rec_color;
@@ -65,10 +71,15 @@ int main(const int argc, const char** argv){
 	GCP gcp(ver_c,edg_c,rec_color);
 	gcp.init();
 	// gcp.LocalSearch(10000);
+	#ifdef USING_TS
 	gcp.TabuSearch();
+	#endif
 	// gcp.HybridEvolutionary(10000/GenerationSize);
-	// gcp.HybridEvolutionary();
-
+	#ifndef USING_TS
+	#ifdef USING_HEA
+	gcp.HybridEvolutionary();
+	#endif
+	#endif
 	// Graph g(ver_c,edg_c);
 	// g.read();
 	// Solution a,b,c;
