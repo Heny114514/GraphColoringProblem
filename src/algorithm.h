@@ -6,6 +6,7 @@
 using namespace std;
 
 extern unsigned int timeLimit;
+extern unsigned int randSeed;
 #define GenerationSize 20
 #define TabuSearchIter 100
 // #define DEBUG
@@ -37,7 +38,10 @@ class Graph{//利用链式前向星存储图
 	vector<int> head;
 	vector<Edge> edges;
 
-	Graph(int vc,int ec);
+	Graph(int vc,int ec):vc(vc),ec(ec){
+		vis.resize(vc,false);
+		head.resize(vc,-1);
+	}
 	void add(int u,int v);//添加边
 	void read();
 	friend ostream& operator<<(ostream &out,const Graph &g);
@@ -45,7 +49,7 @@ class Graph{//利用链式前向星存储图
 
 class Solution{
 	public:
-	Graph *g;
+	Graph &g;
 	int conflicts,ctype;
 	// int **adjTable;
 	vector<int> color;
@@ -57,14 +61,14 @@ class Solution{
 	vector<int> minVerofColorSet;//每种颜色对应的最小元顶点编号
 
 	public:
-	Solution();
+	Solution(Graph &g_ref):g(g_ref),conflicts(0){}
 	~Solution()=default;
 	Solution(const Solution &b)=default;
 	Solution(Solution &&b)=default;
 	void bind(Graph& g);
 	void InitConflicts();//初始化冲突等成员变量
 	void randInit(int ctype);//随机染色
-	bool LocalSearch();//简单局部搜索
+	// bool LocalSearch();//简单局部搜索
 	void TabuSearch(int iter,int bestEver);//禁忌搜索
 	bool isConflict(int ver);//判断顶点ver是否冲突
 	void InitStandardize();//颜色规范表初始化
@@ -94,13 +98,15 @@ class GCP{//GCP问题核心类
 	private:
 	int ver_c,edg_c,rec_color;
 	Graph g;
-	Solution generations[GenerationSize];
-	Solution *bestSol,*worstSol;
+	// Solution generations[GenerationSize];
+	vector<Solution> generations;
+	// Solution *bestSol,*worstSol;
 
 	public:
-	GCP(int vc,int ec,int rec_color);
+	GCP(int vc,int ec,int rec_color):\
+	g(vc,ec),ver_c(vc),edg_c(ec),rec_color(rec_color),generations(GenerationSize,g){}
 	void init();//初始化
-	void LocalSearch(int iter=100);
+	// void LocalSearch(int iter=100);
 	void TabuSearch(int iter=0);
 	void HybridEvolutionary(int iter=0);
 };

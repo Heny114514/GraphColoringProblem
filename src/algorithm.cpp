@@ -2,10 +2,6 @@
 #ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
 ofstream cdb("debug_chosen_critical_one_move.txt",ios::out);
 #endif
-Graph::Graph(int vc,int ec):vc(vc),ec(ec){
-	vis.resize(vc,false);
-	head.resize(vc,-1);
-}
 	
 void Graph::add(int u,int v){
 	edges.push_back({v,head[u]});
@@ -14,35 +10,35 @@ void Graph::add(int u,int v){
 
 void Solution::randInit(int ctype){
 	this->ctype=ctype;
-	color.resize(g->vc);
-	// maxColor.resize(g->vc,0);
-	// Colormax.resize(g->vc,0);
-	// adjTable.resize(g->vc);
+	color.resize(g.vc);
+	// maxColor.resize(g.vc,0);
+	// Colormax.resize(g.vc,0);
+	// adjTable.resize(g.vc);
 	// for(auto &i:adjTable) i.resize(ctype,0);
-	// ttt.resize(g->vc,ctype);
+	// ttt.resize(g.vc,ctype);
 	// color[0]=maxColor[0]=0;
-	for(int i=0;i<g->vc;i++){
+	for(int i=0;i<g.vc;i++){
 		color[i]=rand()%ctype;
 		// maxColor[i]=max(maxColor[i-1],color[i]);
 	}
-	// Colormax[g->vc-1]=color[g->vc-1];
-	// for(int i=g->vc-2;i>=0;i--){
+	// Colormax[g.vc-1]=color[g.vc-1];
+	// for(int i=g.vc-2;i>=0;i--){
 	// 	Colormax[i]=max(Colormax[i+1],color[i]);
 	// }
 	// conflicts=0;
-	// g->vis.assign(g->vc,false);
-	// for(int v=0;v<g->vc;v++){
-	// 	for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
-	// 		int to=g->edges[i].to;
+	// g.vis.assign(g.vc,false);
+	// for(int v=0;v<g.vc;v++){
+	// 	for(int i=g.head[v];i!=-1;i=g.edges[i].nxt){//遍历所有v的出边
+	// 		int to=g.edges[i].to;
 	// 		adjTable[v][color[to]]++;//初始化邻接表
-	// 		if(g->vis[to]) continue;
+	// 		if(g.vis[to]) continue;
 	// 		if(color[v]==color[to]){
 	// 			conflicts++;
 	// 			conflictVertices.insert(v);
 	// 			conflictVertices.insert(to);
 	// 		}
 	// 	}
-	// 	g->vis[v]=true;
+	// 	g.vis[v]=true;
 	// }
 	InitConflicts();
 }
@@ -50,7 +46,7 @@ void Solution::randInit(int ctype){
 // void Solution::randInit(int ctype){//贪心构造
 //     if(!g) return;
 //     this->ctype = ctype;
-//     int vcnt = g->vc;
+//     int vcnt = g.vc;
 //     if(vcnt <= 0) return;
 //     // if requested more colors than vertices, clamp
 //     if(ctype > vcnt) ctype = vcnt, this->ctype = ctype;
@@ -77,8 +73,8 @@ void Solution::randInit(int ctype){
 //             for(int c = 0; c <= allowMax; ++c){
 //                 int conf = 0;
 //                 // count neighbors already assigned with same color
-//                 for(int e = g->head[v]; e != -1; e = g->edges[e].nxt){
-//                     int u = g->edges[e].to;
+//                 for(int e = g.head[v]; e != -1; e = g.edges[e].nxt){
+//                     int u = g.edges[e].to;
 //                     if(u < v && color[u] == c) ++conf;
 //                 }
 //                 if(conf < bestConf){
@@ -128,27 +124,27 @@ void Solution::randInit(int ctype){
 void Solution::InitConflicts(){
 	minVerofColorSet.resize(ctype,-1);
 	standardizedColorTable.resize(ctype,-1);
-	// isMinVerofColorSet.resize(g->vc,false);
-	adjTable.resize(g->vc);
+	// isMinVerofColorSet.resize(g.vc,false);
+	adjTable.resize(g.vc);
 	for(auto &i:adjTable) i.resize(ctype,0);
-	// ttt.resize(g->vc,ctype);
-	ttt.resize(g->vc);
+	// ttt.resize(g.vc,ctype);
+	ttt.resize(g.vc);
 	for(auto &i:ttt) i.resize(ctype,0);
 	conflicts=0;
 	conflictVertices.clear();
-	g->vis.assign(g->vc,false);
-	for(int v=0;v<g->vc;v++){
-		for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
-			int to=g->edges[i].to;
+	g.vis.assign(g.vc,false);
+	for(int v=0;v<g.vc;v++){
+		for(int i=g.head[v];i!=-1;i=g.edges[i].nxt){//遍历所有v的出边
+			int to=g.edges[i].to;
 			adjTable[v][color[to]]++;//初始化邻接表
-			if(g->vis[to]) continue;
+			if(g.vis[to]) continue;
 			if(color[v]==color[to]){
 				conflicts++;
 				conflictVertices.insert(v);
 				conflictVertices.insert(to);
 			}
 		}
-		g->vis[v]=true;
+		g.vis[v]=true;
 	}
 	InitStandardize();
 
@@ -158,16 +154,8 @@ void Solution::InitConflicts(){
 	// standardization();
 }
 
-GCP::GCP(int vc,int ec,int rec_color):g(vc,ec),ver_c(vc),edg_c(ec),rec_color(rec_color){
-	for(int i=0;i<GenerationSize;i++){
-		generations[i].bind(g);
-	}
-	bestSol=nullptr;
-	worstSol=nullptr;
-}
-
 void Solution::bind(Graph& g){
-	this->g=&g;
+	this->g=g;
 }
 
 void GCP::init(){
@@ -210,158 +198,6 @@ ostream& operator<<(ostream &out,const Graph &g){
 	return out;
 }
 
-bool Solution::LocalSearch(){
-	int minDelta=1,mver=-1,mfrom=-1,mto=-1;
-	for(auto v:conflictVertices){//寻找最优移动
-		for(int c=0;c<ctype;c++){
-			if(c==color[v]) continue;
-			int delta=adjTable[v][c]-adjTable[v][color[v]];
-			if(delta<minDelta){
-				minDelta=delta;
-				mver=v;
-				mfrom=color[v];
-				mto=c;
-			}
-		}
-	}
-	if(minDelta<=0){//更新邻接表和冲突顶点
-		conflicts+=minDelta;
-		color[mver]=mto;
-		for(int i=g->head[mver];i!=-1;i=g->edges[i].nxt){
-			int to=g->edges[i].to;
-			adjTable[to][mfrom]--;
-			adjTable[to][mto]++;
-			if(isConflict(to)){
-				conflictVertices.insert(to);
-			}else{
-				conflictVertices.erase(to);
-			}
-		}
-		if(isConflict(mver)){
-			conflictVertices.insert(mver);
-		}else{
-			conflictVertices.erase(mver);
-		}
-		return true;
-	}else{
-		return false;
-	}
-}
-
-void GCP::LocalSearch(int iter){
-	generations[0].randInit(rec_color);
-	bestSol=generations;
-	auto start=Timestamp::getTimestampMs();
-	int i;
-	for(i=0;i<iter;i++){
-		if(Timestamp::getTimestampMs()-start>timeLimit) break;
-		bool improved=generations[0].LocalSearch();
-		if(bestSol->conflicts>generations[0].conflicts){
-			bestSol=generations;
-		}
-		if(!improved) break;
-		if(generations[0].conflicts==0) break;
-	}
-	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
-	cout<<"iterations: "<<i+1<<endl;
-	cout<<*bestSol;
-}
-
-// void Solution::TabuSearch(int iter,int bestEver){
-// 	int minDelta=0x7fffffff,mver=-1,mfrom=-1,mto=-1;
-// 	int tminDelta=0x7fffffff,tmver=-1,tmfrom=-1,tmto=-1;
-// 	for(auto v:conflictVertices){//寻找最优移动
-// 		// if(v==0||color[v]==maxColor[v-1]+1) continue;
-// 		// auto scttemp=standardizedColorTable;
-// 		// shared_ptr<decltype(standardizedColorTable)> sct_ptr(&standardizedColorTable);
-// 		vector<int> *sct_ptr=&standardizedColorTable;
-// 		vector<int> local_sct;
-// 		for(int c=0;c<ctype;c++){
-// 		// for(int c=0;c<ctype;c++){
-// 			if(c==color[v]) continue;
-// 			if(isMinVerofColorSet[v]){
-// 				int ctemp=color[v];
-// 				color[v]=c;
-// 				// sct_ptr=make_shared<decltype(standardizedColorTable)>(ctype,-1);
-// 				// sct_ptr=new vector<int>(ctype,-1);
-// 				local_sct.resize(ctype,-1);
-// 				// standardizedColorTable.assign(ctype,-1);
-// 				for(int i=0,j=0;i<g->vc;i++){
-// 					if(local_sct[color[i]]==-1){
-// 						local_sct[color[i]]=j++;
-// 					}
-// 				}
-// 				color[v]=ctemp;
-// 				sct_ptr=&local_sct;
-// 			}
-// 			// if(c>maxColor[v]) continue;
-// 			int delta=adjTable[v][c]-adjTable[v][color[v]];
-
-// 			if(ttt[v][(*sct_ptr)[c]]>iter){//禁忌
-// 				if(delta<tminDelta){
-// 					tminDelta=delta;
-// 					tmver=v;
-// 					tmfrom=color[v];
-// 					tmto=c;
-// 				}
-// 			}else{
-// 				if(delta<minDelta){
-// 					minDelta=delta;
-// 					mver=v;
-// 					mfrom=color[v];
-// 					mto=c;
-// 				}
-// 			}
-// 			// if(isMinVerofColorSet[v]){
-// 			// 	delete sct_ptr;
-// 			// 	sct_ptr=nullptr;
-// 			// }
-// 		}
-// 		// if(isMinVerofColorSet[v]){
-// 		// 	standardizedColorTable=scttemp;
-// 		// }
-// 	}
-// 	if(tminDelta<minDelta&&conflicts-tminDelta<bestEver){//满足禁忌条件
-// 		minDelta=tminDelta;
-// 		mver=tmver;
-// 		mfrom=tmfrom;
-// 		mto=tmto;
-// 	}
-// 	// If no move was found (e.g. conflictVertices empty), mver will still be -1.
-// 	// Protect against using invalid indices which causes out-of-bounds writes.
-// 	if(mver==-1){
-// 		return;
-// 	}
-// 	//更新邻接表和冲突顶点以及禁忌表
-// 	conflicts+=minDelta;
-
-// 	color[mver]=mto;
-// 	for(int i=g->head[mver];i!=-1;i=g->edges[i].nxt){
-// 		int to=g->edges[i].to;
-// 		adjTable[to][mfrom]--;
-// 		adjTable[to][mto]++;
-// 		if(isConflict(to)){
-// 			conflictVertices.insert(to);
-// 		}else{
-// 			conflictVertices.erase(to);
-// 		}
-// 	}
-// 	if(isConflict(mver)){
-// 		conflictVertices.insert(mver);
-// 	}else{
-// 		conflictVertices.erase(mver);
-// 	}
-// 	ttt[mver][standardizedColorTable[mfrom]]=iter+rand()%10+conflicts;//更新禁忌表
-// 	//更新规范颜色表
-// 	if(isMinVerofColorSet[mver]){
-// 		InitStandardize();
-// 	}
-
-// 	#ifdef DEBUG
-// 	Check();//调试用，检查冲突数是否正确
-// 	#endif
-// }
-
 void Solution::TabuSearch(int iter,int bestEver){
 	#ifdef DEBUG_CHOSEN_CRITICAL_ONE_MOVE
 	bool ifChooseTabu=false;
@@ -384,7 +220,7 @@ void Solution::TabuSearch(int iter,int bestEver){
                 color[v] = c;
                 local_sct.assign(ctype, -1);
 				int maxused=0;
-                for(int i=0; i<g->vc; ++i){
+                for(int i=0; i<g.vc; ++i){
                     int col = color[i];
                     if(local_sct[col] == -1){
                         local_sct[col] = maxused++;
@@ -479,8 +315,8 @@ void Solution::TabuSearch(int iter,int bestEver){
     color[mver] = newColor;
 
     // 对所有邻居调整它们对 mver 颜色统计
-    for(int i = g->head[mver]; i != -1; i = g->edges[i].nxt){
-        int to = g->edges[i].to;
+    for(int i = g.head[mver]; i != -1; i = g.edges[i].nxt){
+        int to = g.edges[i].to;
         // 减去旧颜色计数，增加新颜色计数
         adjTable[to][oldColor]--;
         adjTable[to][newColor]++;
@@ -553,6 +389,7 @@ void GCP::TabuSearch(int iter){
 		if(generations[0].conflicts==0) break;
 	}
 	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
+	cout<<"seed: "<<randSeed<<endl;
 	cout<<"iterations: "<<i+1<<endl;
 	vector<bool> used(rec_color,false);
 	for(auto c:bestColor) used[c]=true;
@@ -569,49 +406,6 @@ bool Solution::isConflict(int ver){
 	return adjTable[ver][color[ver]]>0;
 }
 
-// TabuTenureTable::TabuTenureTable():vc(0),ctype(0),table(nullptr){}
-
-// void TabuTenureTable::resize(int vc,int ctype){
-// 	if(table){
-// 		this->~TabuTenureTable();
-// 	}
-// 	this->vc=vc;
-// 	this->ctype=ctype;
-// 	table = new int*[vc];
-// 	for(int i=0;i<vc;i++){
-// 		table[i] = new int[ctype];
-// 		for(int j=0;j<ctype;j++){
-// 			table[i][j]=0;
-// 		}
-// 	}
-// }
-
-// TabuTenureTable::~TabuTenureTable(){
-// 	for(int i=0;i<vc;i++){
-// 		delete[] table[i];
-// 	}
-// 	delete[] table;
-// }
-
-// int& TabuTenureTable::operator()(int v,int c){
-// 	return table[v][c];
-// }
-
-// Solution::Solution(const Graph* g):conflicts(0){
-// 	this->g=(Graph*)g;
-// }
-
-// Solution& Solution::operator=(const Graph &g){
-// 	conflicts=g.conflicts;
-// 	color.clear();
-// 	for(auto v:g.vertices){
-// 		color.push_back(v.color);
-// 	}
-// 	return *this;
-// }
-
-Solution::Solution():conflicts(0),g(nullptr){}
-
 ostream& operator<<(ostream &out,const Solution &sol){
 	out<<"conflicts: "<<sol.conflicts<<"\ncolors:\n";
 	for(auto c:sol.color) out<<c<<"\n";
@@ -619,14 +413,13 @@ ostream& operator<<(ostream &out,const Solution &sol){
 }
 
 Solution crossover(const Solution &a, const Solution &b){
-	Solution child;
-	child.g=a.g;
+	Solution child(a.g);
 	child.ctype=a.ctype;
-	child.color.resize(a.g->vc);
+	child.color.resize(a.g.vc);
 	// Use STL containers instead of VLAs: safer and portable
 	vector<char> usedColor(a.ctype, 0);
 	vector< set<int> > colorV0(a.ctype), colorV1(a.ctype);
-	for(int v=0;v<a.g->vc;v++){
+	for(int v=0;v<a.g.vc;v++){
 		colorV0[a.color[v]].insert(v);
 		colorV1[b.color[v]].insert(v);
 	}
@@ -676,15 +469,20 @@ Solution crossover(const Solution &a, const Solution &b){
 }
 
 void GCP::HybridEvolutionary(int iter){
-	bestSol=generations;
+	// bestSol=generations;
 	// worstSol=generations;
+	int bestConf=generations[0].conflicts;
+	vector<int> bestColor=generations[0].color;
 	auto start=Timestamp::getTimestampMs();
 	for(int i=0;i<GenerationSize;i++){
 		generations[i].randInit(rec_color);
 		for(int j=0;j<TabuSearchIter;j++)
-			generations[i].TabuSearch(j,bestSol->conflicts);
-		if(bestSol->conflicts<generations[i].conflicts)
-			bestSol=generations+i;
+			generations[i].TabuSearch(j,bestConf);
+		if(bestConf<generations[i].conflicts){
+			bestConf=generations[i].conflicts;
+			bestColor=generations[i].color;
+		}
+			// bestSol=generations+i;
 		// if(worstSol->conflicts>generations[i].conflicts)
 		// 	worstSol=generations+i;
 	}
@@ -701,119 +499,43 @@ void GCP::HybridEvolutionary(int iter){
 		for(int j=0;j<TabuSearchIter;j++)
 			child.TabuSearch(j,child.conflicts);
 		//替换最差个体
-		worstSol=&generations[0];
+		Solution *worstSol=&generations[0];
 		for(int k=1;k<GenerationSize;k++){
 			if(worstSol->conflicts<generations[k].conflicts){
 				worstSol=&generations[k];
 			}
-		}
-		if(child.conflicts<worstSol->conflicts){
-			*worstSol=std::move(child);
-			if(bestSol->conflicts>worstSol->conflicts){
-				bestSol=worstSol;
+			if(child.conflicts<worstSol->conflicts){
+				// replace worstSol by move-constructing from child in-place to avoid calling deleted copy-assignment
+				worstSol->~Solution();
+				new (worstSol) Solution(std::move(child));
+				if(bestConf>worstSol->conflicts){
+					bestConf=worstSol->conflicts;
+					bestColor=worstSol->color;
+				}
 			}
 		}
-		if(bestSol->conflicts==0) break;
+		if(bestConf==0) break;
 	}
 	cout<<"time: "<<Timestamp::getTimestampMs()-start<<"ms\n";
-	cout<<"generations: "<<i+1<<endl;
-	cout<<(*bestSol);
+	cout<<"seed: "<<randSeed<<endl;
+	cout<<"iterations: "<<i+1<<endl;
+	vector<bool> used(rec_color,false);
+	for(auto c:bestColor) used[c]=true;
+	int used_c=0;
+	for(auto u:used) if(u) used_c++;
+	cout<<"color types: "<<used_c<<endl;
+	cout<<"conflicts: "<<bestConf<<"\ncoloring:\n";
+	for(auto c:bestColor){
+		cout<<c<<endl;
+	}
 }
 
-// Solution& Solution::operator=(const Solution &b){
-// 	if(this==&b) return *this;
-// 	g=b.g;
-// 	conflicts=b.conflicts;
-// 	ctype=b.ctype;
-// 	color=b.color;
-// 	adjTable=b.adjTable;
-// 	conflictVertices=b.conflictVertices;
-// 	ttt=b.ttt;
-// 	return *this;
-// }
-
-// Solution& Solution::operator=(Solution &&b){
-// 	cerr<<"called\n";
-// 	if(this==&b) return *this;
-// 	g=b.g;
-// 	b.g=nullptr;
-// 	conflicts=b.conflicts;
-// 	ctype=b.ctype;
-// 	color=std::move(b.color);
-// 	adjTable=std::move(b.adjTable);
-// 	conflictVertices=std::move(b.conflictVertices);
-// 	ttt=std::move(b.ttt);
-// 	return *this;
-// }
-
-// Solution::~Solution(){
-// 	g=nullptr;
-// 	// conflicts=0;
-// 	// ctype=0;
-// 	// color.clear();
-// 	// adjTable.clear();
-// 	// conflictVertices.clear();
-// 	ttt.~TabuTenureTable();
-// }
-
-// TabuTenureTable::TabuTenureTable(const TabuTenureTable &b){
-// 	vc=b.vc;
-// 	ctype=b.ctype;
-// 	table = new int*[vc];
-// 	for(int i=0;i<vc;i++){
-// 		table[i] = new int[ctype];
-// 		for(int j=0;j<ctype;j++){
-// 			table[i][j]=b.table[i][j];
-// 		}
-// 	}
-// }
-
-// TabuTenureTable& TabuTenureTable::operator=(const TabuTenureTable &b){
-// 	if(this==&b) return *this;
-// 	if(table){
-// 		this->~TabuTenureTable();
-// 	}
-// 	vc=b.vc;
-// 	ctype=b.ctype;
-// 	table = new int*[vc];
-// 	for(int i=0;i<vc;i++){
-// 		table[i] = new int[ctype];
-// 		for(int j=0;j<ctype;j++){
-// 			table[i][j]=b.table[i][j];
-// 		}
-// 	}
-// 	return *this;
-// }
-
-// TabuTenureTable::TabuTenureTable(TabuTenureTable &&b){
-// 	vc=b.vc;
-// 	ctype=b.ctype;
-// 	table=b.table;
-// 	b.vc=0;
-// 	b.ctype=0;
-// 	b.table=nullptr;
-// }
-
-// TabuTenureTable& TabuTenureTable::operator=(TabuTenureTable &&b){
-// 	if(this==&b) return *this;
-// 	if(table){
-// 		this->~TabuTenureTable();
-// 	}
-// 	vc=b.vc;
-// 	ctype=b.ctype;
-// 	table = b.table;
-// 	b.vc=0;
-// 	b.ctype=0;
-// 	b.table=nullptr;
-// 	return *this;
-// }
-
 void Solution::InitStandardize(){
-	// isMinVerofColorSet.assign(g->vc,false);
+	// isMinVerofColorSet.assign(g.vc,false);
 	standardizedColorTable.assign(ctype,-1);
 	minVerofColorSet.assign(ctype,-1);
 	int maxused=0;
-	for(int i=0;i<g->vc;i++){
+	for(int i=0;i<g.vc;i++){
 		if(standardizedColorTable[color[i]]==-1){
 			standardizedColorTable[color[i]]=maxused++;
 			// isMinVerofColorSet[i]=true;
@@ -833,28 +555,28 @@ void Solution::InitStandardize(){
 bool Solution::Check(){
 	//检查冲突数
 	int conf=0;
-	g->vis.assign(g->vc,false);
-	for(int v=0;v<g->vc;v++){
-		for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
-			int to=g->edges[i].to;
-			if(g->vis[to]) continue;
+	g.vis.assign(g.vc,false);
+	for(int v=0;v<g.vc;v++){
+		for(int i=g.head[v];i!=-1;i=g.edges[i].nxt){//遍历所有v的出边
+			int to=g.edges[i].to;
+			if(g.vis[to]) continue;
 			if(color[v]==color[to]){
 				conf++;
-				// g->vis[to]=true;
+				// g.vis[to]=true;
 				
 			}
 		}
-		g->vis[v]=true;
+		g.vis[v]=true;
 	}
 	if(conf!=conflicts){
 		cerr<<"conflict error! calculated: "<<conf<<" stored: "<<conflicts<<endl;
 		return false;
 	}
 	//检查邻接表
-	for(int v=0;v<g->vc;v++){
+	for(int v=0;v<g.vc;v++){
 		vector<int> adjtemp(ctype,0);
-		for(int i=g->head[v];i!=-1;i=g->edges[i].nxt){//遍历所有v的出边
-			int to=g->edges[i].to;
+		for(int i=g.head[v];i!=-1;i=g.edges[i].nxt){//遍历所有v的出边
+			int to=g.edges[i].to;
 			adjtemp[color[to]]++;
 		}
 		for(int c=0;c<ctype;c++){
@@ -874,7 +596,7 @@ bool Solution::Check(){
 	//检查颜色规范表
 	vector<int> scttemp(ctype,-1);
 	int maxused=0;
-	for(int i=0;i<g->vc;i++){
+	for(int i=0;i<g.vc;i++){
 		if(scttemp[color[i]]==-1){
 			scttemp[color[i]]=maxused++;
 		}
